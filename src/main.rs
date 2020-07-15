@@ -5,9 +5,9 @@ use std::env;
 use std::error::Error;
 use std::ffi::OsString;
 use std::fs::File;
+use std::hash::Hash;
 use std::process;
 use std::slice::Chunks;
-use std::sync::Arc;
 use std::thread;
 use std::time::Instant;
 
@@ -78,8 +78,12 @@ fn run() -> Result<(), Box<dyn Error>> {
         for child in children {
             let chunk_result = child.join().unwrap();
 
-            colors.extend(chunk_result.0.iter());
-            shapes.extend(chunk_result.1.iter());
+            for (key, value) in chunk_result.0.iter() {
+                *(colors.entry(key).or_insert_with(|| 0)) += value;
+            }
+            for (key, value) in chunk_result.1.iter() {
+                *(shapes.entry(key).or_insert_with(|| 0)) += value;
+            }
         }
         println!("{:?}", &colors);
         println!("{:?}", &shapes);
