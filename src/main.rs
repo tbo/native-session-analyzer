@@ -21,11 +21,16 @@ struct Session {
 
 type Record = (String, i64, String, String, String);
 
+#[derive(Debug)]
+struct User {
+    colors: HashMap<String, i64>,
+    shapes: HashMap<String, i64>,
+}
+
 fn run() -> Result<(), Box<dyn Error>> {
     let file_path = get_first_arg()?;
     let file = File::open(file_path)?;
     let mut rdr = csv::Reader::from_reader(file);
-    // let mut counter = 0;
     // let mut stack: Vec<Session> = Vec::new();
     let mut list = Vec::new();
     // let mut currentSession: Option<Session> = None;
@@ -47,19 +52,20 @@ fn run() -> Result<(), Box<dyn Error>> {
         // })
     }
     let start = Instant::now();
-    let mut colors = HashMap::new();
-    let mut shapes = HashMap::new();
-    for e in &list {
+    let mut users = HashMap::new();
+    for e in list {
+        let user = users.entry(e.4).or_insert_with(|| User {
+            shapes: HashMap::new(),
+            colors: HashMap::new(),
+        });
         if e.3.eq("color") {
-            *(colors.entry(&e.0).or_insert_with(|| 0)) += e.1;
+            *(user.colors.entry(e.0).or_insert_with(|| 0)) += e.1;
         } else if e.3.eq("shape") {
-            *(shapes.entry(&e.0).or_insert_with(|| 0)) += e.1;
+            *(user.shapes.entry(e.0).or_insert_with(|| 0)) += e.1;
         }
     }
-    // println!("{:?}", counter);
     println!("{}ms", start.elapsed().as_millis());
-    println!("{:?}", colors);
-    println!("{:?}", shapes);
+    // println!("{:?}", &users);
     Ok(())
 }
 
